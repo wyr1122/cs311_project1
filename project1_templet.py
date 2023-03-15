@@ -34,10 +34,10 @@ class AI(object):
                     self.candidate_list.append((x, y))
         if len(self.candidate_list) != 0:
             self.candidate_list.append(self.candidate_list[0])
+            Node.time = time.time()
             root.search()
             self.candidate_list.pop()
             self.candidate_list.append(root.step)
-
         # Here is the simplest sample:Random decision
         # idx = np.where(chessboard == COLOR_NONE)
         # idx = list(zip(idx[0], idx[1]))
@@ -94,6 +94,7 @@ class Node(object):
                   [10, 1, 3, 2, 2, 3, 1, 10],
                   [-25, -45, 1, 1, 1, 1, -45, -25],
                   [500, -25, 10, 5, 5, 10, -25, 500]]
+    time = time.time()
 
     def __init__(self, parent, x, y, alpha, beta, color, is_max_node, chessboard=[]):
         self.step = (x, y)
@@ -137,6 +138,8 @@ class Node(object):
                     Node(self, -1, 0, -100000, self.beta, -self.color, not self.is_max_node))
         for child in self.children:
             child.search()
+            if time.time() - Node.time > 4.9:
+                return
             if self.is_max_node:
                 if child.beta > self.alpha:
                     self.alpha = child.beta
