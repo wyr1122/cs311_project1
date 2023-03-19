@@ -36,29 +36,38 @@ class AI(object):
                     cnt += 1
                 if is_valid(self.color, x, y, chessboard):
                     self.candidate_list.append((x, y))
-
+        # print(root.get_value())
         if len(self.candidate_list) != 0:
             Node.time = time.time()
+            Node.depth = 3
             if cnt <= Node.final_depth:
                 root.final_search()
                 print(root.alpha)
+                self.candidate_list.append(root.step)
             else:
-                root.search()
-            self.candidate_list.append(root.step)
-        # Here is the simplest sample:Random decision
-        # idx = np.where(chessboard == COLOR_NONE)
-        # idx = list(zip(idx[0], idx[1]))
-        # ==============Find new pos========================================
-        # Make sure that the position of your decision on the chess board is empty.
-        # If not, the system will return error.
-        # Add your decision into candidate_list, Records the chessboard
-        # You need to add all the positions which are valid
-        # candidate_list example: [(3,3),(4,4)]
-        # You need append your decision at the end of the candidate_list,
-        # candidate_list example: [(3,3),(4,4),(4,4)]
-        # we will pick the last element of the candidate_list as the position you choose.
-        # In above example, we will pick (4,4) as your decision.
-        # If there is no valid position, you must return an empty
+                for i in range(3):
+                    m = root.search()
+                    if m == 1:
+                        if i > 0:
+                            self.candidate_list.pop()
+                        self.candidate_list.append(root.step)
+                        print(Node.depth)
+                    Node.depth += 1
+
+            # Here is the simplest sample:Random decision
+    # idx = np.where(chessboard == COLOR_NONE)
+    # idx = list(zip(idx[0], idx[1]))
+    # ==============Find new pos========================================
+    # Make sure that the position of your decision on the chess board is empty.
+    # If not, the system will return error.
+    # Add your decision into candidate_list, Records the chessboard
+    # You need to add all the positions which are valid
+    # candidate_list example: [(3,3),(4,4)]
+    # You need append your decision at the end of the candidate_list,
+    # candidate_list example: [(3,3),(4,4),(4,4)]
+    # we will pick the last element of the candidate_list as the position you choose.
+    # In above example, we will pick (4,4) as your decision.
+    # If there is no valid position, you must return an empty
 
 
 def is_valid(color, x, y, chessboard):
@@ -101,19 +110,9 @@ class Node(object):
                   [-8, -16, 4, 4, 4, 4, -16, -8],
                   [48, -8, -16, 3, 3, -16, -8, 48],
                   [-99, 48, -8, 6, 6, -8, 48, -99]]
-    # valueBoard = [
-    #     [-100, 20, -10, -5, -5, -10, 20, -100],
-    #     [20, 50, 2, 2, 2, 2, 50, 20],
-    #     [-10, 2, 1, 1, 1, 1, 2, -10],
-    #     [-5, 2, 1, 1, 1, 1, 2, -5],
-    #     [-5, 2, 1, 1, 1, 1, 2, -5],
-    #     [-10, 2, 1, 1, 1, 1, 2, -10],
-    #     [20, 50, 2, 2, 2, 2, 50, 20],
-    #     [-100, 20, -10, -5, -5, -10, 20, -100]
-    # ]
     time = time.time()
-    depth = 4
-    final_depth = 12
+    depth = 3
+    final_depth = 8
     color = 0
 
     def __init__(self, parent, x, y, alpha, beta, color, is_max_node, chessboard=[]):
@@ -155,15 +154,16 @@ class Node(object):
                         self.step = child.step
                 if self.alpha >= self.beta:
                     self.alpha = self.beta
-                    return
+                    return 1
             else:
                 if child.alpha < self.beta:
                     self.beta = child.alpha
                 if self.alpha >= self.beta:
                     self.beta = self.alpha
-                    return
-            if time.time() - Node.time > 4.9:
-                return
+                    return 1
+            if time.time() - Node.time > 4.95:
+                return 0
+        return 1
 
     def final_search(self):
         final = True
@@ -204,15 +204,16 @@ class Node(object):
                         self.step = child.step
                 if self.alpha >= self.beta:
                     self.alpha = self.beta
-                    return
+                    return 1
             else:
                 if child.alpha < self.beta:
                     self.beta = child.alpha
                 if self.alpha >= self.beta:
                     self.beta = self.alpha
-                    return
-            if time.time() - Node.time > 4.9:
-                return
+                    return 1
+            # if time.time() - Node.time > 4.95:
+            #     return 0
+        return 1
 
     def get_value(self):
         result = 0
@@ -220,10 +221,40 @@ class Node(object):
             for j in range(8):
                 if self.chessboard[i][j] == Node.color:
                     result += Node.valueBoard[i][j]
-                elif is_valid(Node.color, i, j, self.chessboard):
-                    result += 10
+                    # result -= 5
+                # if self.chessboard[i][j] == -Node.color:
+                #     result += 5
                 elif is_valid(-Node.color, i, j, self.chessboard):
-                    result -= 10
-
-                    # result -= 1
+                    result -= 20
+        result += len(self.parent.children) * 20
+        for i in range(2):
+            i = 7 * i
+            for j in range(2):
+                j = 7 * j
+                if self.chessboard[i][j] == Node.color:
+                    result -= 15
+                    for m in range(6):
+                        if i == 7:
+                            x = 6 - m
+                        else:
+                            x = m + 1
+                        if self.chessboard[x][j] == Node.color:
+                            result -= 15
+                            if m == 5 and i == 0:
+                                if self.chessboard[7][j] == Node.color:
+                                    result += 90
+                        else:
+                            break
+                    for m in range(6):
+                        if j == 7:
+                            y = 6 - m
+                        else:
+                            y = m + 1
+                        if self.chessboard[i][y] == Node.color:
+                            result -= 20
+                            if m == 5 and j == 0:
+                                if self.chessboard[i][7] == Node.color:
+                                    result += 120
+                        else:
+                            break
         return result
