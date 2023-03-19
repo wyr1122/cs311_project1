@@ -221,9 +221,9 @@ class Node(object):
             for j in range(8):
                 if self.chessboard[i][j] == Node.color:
                     result += Node.valueBoard[i][j]
-                    result -= 5
-                if self.chessboard[i][j] == -Node.color:
-                    result += 5
+                    result -= 10
+                elif self.chessboard[i][j] == -Node.color:
+                    result += 10
                 elif is_valid(-Node.color, i, j, self.chessboard):
                     result -= 20
         result += len(self.parent.children) * 20
@@ -251,10 +251,40 @@ class Node(object):
                         else:
                             y = m + 1
                         if self.chessboard[i][y] == Node.color:
-                            result -= 20
+                            result -= 15
                             if m == 5 and j == 0:
                                 if self.chessboard[i][7] == Node.color:
-                                    result += 120
+                                    result += 90
+                        else:
+                            break
+        for i in range(2):
+            i = 7 * i
+            for j in range(2):
+                j = 7 * j
+                if self.chessboard[i][j] == -Node.color:
+                    result += 15
+                    for m in range(6):
+                        if i == 7:
+                            x = 6 - m
+                        else:
+                            x = m + 1
+                        if self.chessboard[x][j] == -Node.color:
+                            result += 15
+                            if m == 5 and i == 0:
+                                if self.chessboard[7][j] == -Node.color:
+                                    result -= 90
+                        else:
+                            break
+                    for m in range(6):
+                        if j == 7:
+                            y = 6 - m
+                        else:
+                            y = m + 1
+                        if self.chessboard[i][y] == -Node.color:
+                            result += 15
+                            if m == 5 and j == 0:
+                                if self.chessboard[i][7] == -Node.color:
+                                    result -= 90
                         else:
                             break
         return result
