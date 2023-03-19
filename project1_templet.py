@@ -221,9 +221,9 @@ class Node(object):
             for j in range(8):
                 if self.chessboard[i][j] == Node.color:
                     result += Node.valueBoard[i][j]
-                    # result -= 5
-                # if self.chessboard[i][j] == -Node.color:
-                #     result += 5
+                    result -= 5
+                if self.chessboard[i][j] == -Node.color:
+                    result += 5
                 elif is_valid(-Node.color, i, j, self.chessboard):
                     result -= 20
         result += len(self.parent.children) * 20
