@@ -1,22 +1,28 @@
 import numpy as np
 import random
 import time
-from numba import jit, int32
+from numba import jit
+from functools import lru_cache
 from numba.experimental import jitclass
 
 COLOR_BLACK = -1
 COLOR_WHITE = 1
 COLOR_NONE = 0
 random.seed(0)
+table = False
+block = True
 color = 0
-valueBoard = np.array([[-999, 48, -8, 6, 6, -8, 48, -999],
+stable = 0
+disk = 50
+mobile = 50
+valueBoard = np.array([[-99, 48, -8, 6, 6, -8, 48, -99],
                        [48, -8, -16, 3, 3, -16, -8, 48],
                        [-8, -16, 4, 4, 4, 4, -16, -8],
                        [6, 1, 2, 0, 0, 2, 1, 6],
                        [6, 1, 2, 0, 0, 2, 1, 6],
                        [-8, -16, 4, 4, 4, 4, -16, -8],
                        [48, -8, -16, 3, 3, -16, -8, 48],
-                       [-999, 48, -8, 6, 6, -8, 48, -999]])
+                       [-99, 48, -8, 6, 6, -8, 48, -99]])
 
 
 # don't change the class name
@@ -58,7 +64,7 @@ class AI(object):
                 print(root.alpha)
                 self.candidate_list.append(root.step)
             else:
-                for i in range(5):
+                for i in range(7):
                     root = Node(0, -1, 0, -100000, 100000, -self.color, True, chessboard)
                     m = search(root)
                     if m == 1:
@@ -124,30 +130,30 @@ def get_value(chessboard, num):
     for i in range(8):
         for j in range(8):
             if chessboard[i][j] == color:
-                result += valueBoard[i][j]
-                # result -= 10
-            # elif chessboard[i][j] == -color:
-            #     result += 10
+                if table:
+                    result += valueBoard[i][j]
+                result -= disk
+            elif chessboard[i][j] == -color:
+                result += disk
             elif is_valid(-color, i, j, chessboard):
-                result -= 30
-    # result += len(self.parent.children) * 30
-    result += num * 30
+                result -= mobile
+    result += num * mobile
     for i in range(2):
         i = 7 * i
         for j in range(2):
             j = 7 * j
             if chessboard[i][j] == color:
-                result -= 20
+                result -= stable
                 for m in range(6):
                     if i == 7:
                         x = 6 - m
                     else:
                         x = m + 1
                     if chessboard[x][j] == color:
-                        result -= 20
+                        result -= stable
                         if m == 5 and i == 0:
                             if chessboard[7][j] == color:
-                                result += 120
+                                result += 6 * stable
                     else:
                         break
                 for m in range(6):
@@ -156,15 +162,16 @@ def get_value(chessboard, num):
                     else:
                         y = m + 1
                     if chessboard[i][y] == color:
-                        result -= 20
+                        result -= stable
                         if m == 5 and j == 0:
                             if chessboard[i][7] == color:
-                                result += 120
+                                result += 6 * stable
                     else:
                         break
     return result
 
 
+@lru_cache()
 def search(self):
     if self.ply == Node.depth:
         self.alpha = get_value(self.chessboard, len(self.parent.children))
@@ -259,6 +266,7 @@ class Node(object):
     depth = 3
     final_depth = 9
 
+    @lru_cache()
     def final_search(self):
         final = True
         self_cnt = 0
