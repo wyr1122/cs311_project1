@@ -45,7 +45,7 @@ class AI(object):
                 print(root.alpha)
                 self.candidate_list.append(root.step)
             else:
-                for i in range(3):
+                for i in range(5):
                     m = root.search()
                     if m == 1:
                         if i > 0:
@@ -128,6 +128,40 @@ class Node(object):
             self.ply = 0
         if x >= 0:
             self.chessboard[x][y] = color
+            for i in range(8):
+                for j in range(8):
+                    result = 1
+                    if self.chessboard[i][j] == color and (abs(x - i) > 1 or abs(y - j) > 1):
+                        if abs(x - i) == abs(y - j):
+                            for k in range(abs(x - i) - 1):
+                                k = k + 1
+                                if self.chessboard[x + abs(i - x) // (i - x) * k][
+                                    y + abs(j - y) // (j - y) * k] != -color:
+                                    result = 0
+                            if result:
+                                for k in range(abs(x - i) - 1):
+                                    k = k + 1
+                                    self.chessboard[x + abs(i - x) // (i - x) * k][
+                                        y + abs(j - y) // (j - y) * k] = color
+
+                        if i == x:
+                            for k in range(abs(j - y) - 1):
+                                k = k + 1
+                                if self.chessboard[i][y + abs(j - y) // (j - y) * k] != -color:
+                                    result = 0
+                            if result:
+                                for k in range(abs(j - y) - 1):
+                                    k = k + 1
+                                    self.chessboard[i][y + abs(j - y) // (j - y) * k] = color
+                        if j == y:
+                            for k in range(abs(i - x) - 1):
+                                k = k + 1
+                                if self.chessboard[x + abs(i - x) // (i - x) * k][j] != -color:
+                                    result = 0
+                            if result:
+                                for k in range(abs(i - x) - 1):
+                                    k = k + 1
+                                    self.chessboard[x + abs(i - x) // (i - x) * k][j] = color
         self.color = color
         self.is_max_node = is_max_node
         self.children = []
@@ -161,7 +195,7 @@ class Node(object):
                 if self.alpha >= self.beta:
                     self.beta = self.alpha
                     return 1
-            if time.time() - Node.time > 4.95:
+            if time.time() - Node.time > 4.9:
                 return 0
         return 1
 
@@ -221,9 +255,9 @@ class Node(object):
             for j in range(8):
                 if self.chessboard[i][j] == Node.color:
                     result += Node.valueBoard[i][j]
-                    result -= 10
-                elif self.chessboard[i][j] == -Node.color:
-                    result += 10
+                    # result -= 10
+                # elif self.chessboard[i][j] == -Node.color:
+                #     result += 10
                 elif is_valid(-Node.color, i, j, self.chessboard):
                     result -= 20
         result += len(self.parent.children) * 20
@@ -255,36 +289,6 @@ class Node(object):
                             if m == 5 and j == 0:
                                 if self.chessboard[i][7] == Node.color:
                                     result += 90
-                        else:
-                            break
-        for i in range(2):
-            i = 7 * i
-            for j in range(2):
-                j = 7 * j
-                if self.chessboard[i][j] == -Node.color:
-                    result += 15
-                    for m in range(6):
-                        if i == 7:
-                            x = 6 - m
-                        else:
-                            x = m + 1
-                        if self.chessboard[x][j] == -Node.color:
-                            result += 15
-                            if m == 5 and i == 0:
-                                if self.chessboard[7][j] == -Node.color:
-                                    result -= 90
-                        else:
-                            break
-                    for m in range(6):
-                        if j == 7:
-                            y = 6 - m
-                        else:
-                            y = m + 1
-                        if self.chessboard[i][y] == -Node.color:
-                            result += 15
-                            if m == 5 and j == 0:
-                                if self.chessboard[i][7] == -Node.color:
-                                    result -= 90
                         else:
                             break
         return result
