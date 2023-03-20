@@ -1,13 +1,22 @@
 import numpy as np
 import random
 import time
-from numba import jit
+from numba import jit, int32
 from numba.experimental import jitclass
 
 COLOR_BLACK = -1
 COLOR_WHITE = 1
 COLOR_NONE = 0
 random.seed(0)
+color = 0
+valueBoard = np.array([[-999, 48, -8, 6, 6, -8, 48, -999],
+                       [48, -8, -16, 3, 3, -16, -8, 48],
+                       [-8, -16, 4, 4, 4, 4, -16, -8],
+                       [6, 1, 2, 0, 0, 2, 1, 6],
+                       [6, 1, 2, 0, 0, 2, 1, 6],
+                       [-8, -16, 4, 4, 4, 4, -16, -8],
+                       [48, -8, -16, 3, 3, -16, -8, 48],
+                       [-999, 48, -8, 6, 6, -8, 48, -999]])
 
 
 # don't change the class name
@@ -30,9 +39,9 @@ class AI(object):
         self.candidate_list.clear()
         # ==================================================================
         # Write your algorithm here
-        root = Node(0, -1, 0, -100000, 100000, -self.color, True, chessboard)
         cnt = 0
-        Node.color = self.color
+        global color
+        color = self.color
         for x in range(8):
             for y in range(8):
                 if chessboard[x][y] == COLOR_NONE:
@@ -44,18 +53,21 @@ class AI(object):
             Node.time = time.time()
             Node.depth = 3
             if cnt <= Node.final_depth:
+                root = Node(0, -1, 0, -100000, 100000, -self.color, True, chessboard)
                 root.final_search()
                 print(root.alpha)
                 self.candidate_list.append(root.step)
             else:
                 for i in range(5):
-                    # m = root.search()
+                    root = Node(0, -1, 0, -100000, 100000, -self.color, True, chessboard)
                     m = search(root)
                     if m == 1:
                         if i > 0:
                             self.candidate_list.pop()
                         self.candidate_list.append(root.step)
                         print(Node.depth)
+                        print(root.step)
+                        print(time.time() - Node.time)
                     Node.depth += 1
 
             # Here is the simplest sample:Random decision
@@ -74,7 +86,7 @@ class AI(object):
     # If there is no valid position, you must return an empty
 
 
-@jit
+@jit(nopython=True)
 def is_valid(color, x, y, chessboard):
     if chessboard[x][y] != COLOR_NONE:
         return False
@@ -106,10 +118,57 @@ def is_valid(color, x, y, chessboard):
     return False
 
 
+@jit(nopython=True)
+def get_value(chessboard, num):
+    result = 0
+    for i in range(8):
+        for j in range(8):
+            if chessboard[i][j] == color:
+                result += valueBoard[i][j]
+                # result -= 10
+            # elif chessboard[i][j] == -color:
+            #     result += 10
+            elif is_valid(-color, i, j, chessboard):
+                result -= 30
+    # result += len(self.parent.children) * 30
+    result += num * 30
+    for i in range(2):
+        i = 7 * i
+        for j in range(2):
+            j = 7 * j
+            if chessboard[i][j] == color:
+                result -= 20
+                for m in range(6):
+                    if i == 7:
+                        x = 6 - m
+                    else:
+                        x = m + 1
+                    if chessboard[x][j] == color:
+                        result -= 20
+                        if m == 5 and i == 0:
+                            if chessboard[7][j] == color:
+                                result += 120
+                    else:
+                        break
+                for m in range(6):
+                    if j == 7:
+                        y = 6 - m
+                    else:
+                        y = m + 1
+                    if chessboard[i][y] == color:
+                        result -= 20
+                        if m == 5 and j == 0:
+                            if chessboard[i][7] == color:
+                                result += 120
+                    else:
+                        break
+    return result
+
+
 def search(self):
     if self.ply == Node.depth:
-        self.alpha = get_value(self)
-        self.beta = get_value(self)
+        self.alpha = get_value(self.chessboard, len(self.parent.children))
+        self.beta = self.alpha
         return
     for i in range(8):
         for j in range(8):
@@ -136,24 +195,14 @@ def search(self):
             if self.alpha >= self.beta:
                 self.beta = self.alpha
                 return 1
-        if time.time() - Node.time > 4.5:
+        if time.time() - Node.time > 4.2:
             return 0
     return 1
 
 
+# spec = [('valueBoard', int32[:]), ('time', int32), ('depth', int32), ('final_depth', int32), ('color', int32)]
+# @jitclass(spec)
 class Node(object):
-    valueBoard = np.array([[-99, 48, -8, 6, 6, -8, 48, -99],
-                           [48, -8, -16, 3, 3, -16, -8, 48],
-                           [-8, -16, 4, 4, 4, 4, -16, -8],
-                           [6, 1, 2, 0, 0, 2, 1, 6],
-                           [6, 1, 2, 0, 0, 2, 1, 6],
-                           [-8, -16, 4, 4, 4, 4, -16, -8],
-                           [48, -8, -16, 3, 3, -16, -8, 48],
-                           [-99, 48, -8, 6, 6, -8, 48, -99]])
-    time = time.time()
-    depth = 3
-    final_depth = 9
-    color = 0
 
     def __init__(self, parent, x, y, alpha, beta, color, is_max_node, chessboard=np.array([])):
         self.step = (x, y)
@@ -206,38 +255,9 @@ class Node(object):
         self.is_max_node = is_max_node
         self.children = []
 
-    # def search(self):
-    #     if self.ply == Node.depth:
-    #         self.alpha = self.get_value()
-    #         self.beta = self.get_value()
-    #         return
-    #     for i in range(8):
-    #         for j in range(8):
-    #             if is_valid(-self.color, i, j, self.chessboard):
-    #                 child = Node(self, i, j, self.alpha, self.beta, -self.color, not self.is_max_node)
-    #                 self.children.append(child)
-    #     if len(self.children) == 0:
-    #         child = Node(self, -1, 0, self.alpha, self.beta, -self.color, not self.is_max_node)
-    #         self.children.append(child)
-    #     for child in self.children:
-    #         child.search()
-    #         if self.is_max_node:
-    #             if child.beta > self.alpha:
-    #                 self.alpha = child.beta
-    #                 if self.ply == 0:
-    #                     self.step = child.step
-    #             if self.alpha >= self.beta:
-    #                 self.alpha = self.beta
-    #                 return 1
-    #         else:
-    #             if child.alpha < self.beta:
-    #                 self.beta = child.alpha
-    #             if self.alpha >= self.beta:
-    #                 self.beta = self.alpha
-    #                 return 1
-    #         if time.time() - Node.time > 4.9:
-    #             return 0
-    #     return 1
+    time = time.time()
+    depth = 3
+    final_depth = 9
 
     def final_search(self):
         final = True
@@ -246,9 +266,9 @@ class Node(object):
 
         for i in range(8):
             for j in range(8):
-                if self.chessboard[i][j] == Node.color:
+                if self.chessboard[i][j] == color:
                     self_cnt += 1
-                elif self.chessboard[i][j] == -Node.color:
+                elif self.chessboard[i][j] == -color:
                     other_cnt += 1
                 if is_valid(self.color, i, j, self.chessboard):
                     final = False
@@ -288,48 +308,3 @@ class Node(object):
             # if time.time() - Node.time > 4.95:
             #     return 0
         return 1
-
-
-def get_value(self):
-    result = 0
-    for i in range(8):
-        for j in range(8):
-            if self.chessboard[i][j] == Node.color:
-                result += Node.valueBoard[i][j]
-                result -= 10
-            elif self.chessboard[i][j] == -Node.color:
-                result += 10
-            elif is_valid(-Node.color, i, j, self.chessboard):
-                result -= 30
-    result += len(self.parent.children) * 30
-    for i in range(2):
-        i = 7 * i
-        for j in range(2):
-            j = 7 * j
-            if self.chessboard[i][j] == Node.color:
-                result -= 20
-                for m in range(6):
-                    if i == 7:
-                        x = 6 - m
-                    else:
-                        x = m + 1
-                    if self.chessboard[x][j] == Node.color:
-                        result -= 20
-                        if m == 5 and i == 0:
-                            if self.chessboard[7][j] == Node.color:
-                                result += 120
-                    else:
-                        break
-                for m in range(6):
-                    if j == 7:
-                        y = 6 - m
-                    else:
-                        y = m + 1
-                    if self.chessboard[i][y] == Node.color:
-                        result -= 20
-                        if m == 5 and j == 0:
-                            if self.chessboard[i][7] == Node.color:
-                                result += 120
-                    else:
-                        break
-    return result
