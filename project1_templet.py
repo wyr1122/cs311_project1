@@ -2,6 +2,7 @@ import numpy as np
 import random
 import time
 from numba import jit
+from functools import lru_cache
 from numba.experimental import jitclass
 
 COLOR_BLACK = -1
@@ -14,6 +15,7 @@ color = 0
 stable = 30
 disk = 10
 mobile = 50
+final_depth = 9
 cnt = 0
 valueBoard = np.array([[-199, 48, -8, 6, 6, -8, 48, -199],
                        [48, -8, -16, 3, 3, -16, -8, 48],
@@ -58,14 +60,28 @@ class AI(object):
         # print(root.get_value())
         if len(self.candidate_list) != 0:
             Node.time = time.time()
-            Node.depth = 3
-            if cnt <= Node.final_depth:
+            Node.depth = 2
+            if cnt <= final_depth:
                 root = Node(0, -1, 0, -100000, 100000, -self.color, True, chessboard)
                 root.final_search()
                 print(root.alpha)
                 self.candidate_list.append(root.step)
+            elif cnt <= 18:
+                for i in range(3):
+                    # if cnt - Node.depth < 8:
+                    #     break
+                    root = Node(0, -1, 0, -100000, 100000, -self.color, True, chessboard)
+                    m = search(root)
+                    if m == 1:
+                        if i > 0:
+                            self.candidate_list.pop()
+                        self.candidate_list.append(root.step)
+                        print(Node.depth)
+                        print(root.step)
+                        print(time.time() - Node.time)
+                    Node.depth += 1
             else:
-                for i in range(7):
+                for i in range(8):
                     root = Node(0, -1, 0, -100000, 100000, -self.color, True, chessboard)
                     m = search(root)
                     if m == 1:
@@ -93,7 +109,7 @@ class AI(object):
     # If there is no valid position, you must return an empty
 
 
-# @jit(nopython=True)
+@jit(nopython=True)
 def is_valid(color, x, y, chessboard):
     if chessboard[x][y] != COLOR_NONE:
         return False
@@ -125,10 +141,10 @@ def is_valid(color, x, y, chessboard):
     return False
 
 
-# @jit(nopython=True)
+@jit(nopython=True)
 def get_value(chessboard, num):
     result = 0
-    if cnt > 20:
+    if cnt > 18:
         for i in range(8):
             for j in range(8):
                 if chessboard[i][j] == color:
@@ -146,6 +162,9 @@ def get_value(chessboard, num):
                 if chessboard[i][j] == color:
                     if table:
                         result += valueBoard[i][j]
+                    result -= disk
+                elif chessboard[i][j] == -color:
+                    result += disk
         for i in range(2):
             i = 7 * i
             for j in range(2):
@@ -209,6 +228,7 @@ def get_value(chessboard, num):
     return result
 
 
+@lru_cache()
 def search(self):
     if self.ply == Node.depth:
         self.alpha = get_value(self.chessboard, len(self.parent.children))
@@ -301,8 +321,8 @@ class Node(object):
 
     time = time.time()
     depth = 3
-    final_depth = 9
 
+    @lru_cache()
     def final_search(self):
         final = True
         self_cnt = 0
