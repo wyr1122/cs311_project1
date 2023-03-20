@@ -2,27 +2,27 @@ import numpy as np
 import random
 import time
 from numba import jit
-from functools import lru_cache
 from numba.experimental import jitclass
 
 COLOR_BLACK = -1
 COLOR_WHITE = 1
 COLOR_NONE = 0
 random.seed(0)
-table = False
-block = True
+table = True
+# block = True
 color = 0
-stable = 0
-disk = 50
+stable = 30
+disk = 10
 mobile = 50
-valueBoard = np.array([[-99, 48, -8, 6, 6, -8, 48, -99],
+cnt = 0
+valueBoard = np.array([[-199, 48, -8, 6, 6, -8, 48, -199],
                        [48, -8, -16, 3, 3, -16, -8, 48],
                        [-8, -16, 4, 4, 4, 4, -16, -8],
                        [6, 1, 2, 0, 0, 2, 1, 6],
                        [6, 1, 2, 0, 0, 2, 1, 6],
                        [-8, -16, 4, 4, 4, 4, -16, -8],
                        [48, -8, -16, 3, 3, -16, -8, 48],
-                       [-99, 48, -8, 6, 6, -8, 48, -99]])
+                       [-199, 48, -8, 6, 6, -8, 48, -199]])
 
 
 # don't change the class name
@@ -45,8 +45,9 @@ class AI(object):
         self.candidate_list.clear()
         # ==================================================================
         # Write your algorithm here
-        cnt = 0
         global color
+        global cnt
+        cnt = 0
         color = self.color
         for x in range(8):
             for y in range(8):
@@ -92,7 +93,7 @@ class AI(object):
     # If there is no valid position, you must return an empty
 
 
-@jit(nopython=True)
+# @jit(nopython=True)
 def is_valid(color, x, y, chessboard):
     if chessboard[x][y] != COLOR_NONE:
         return False
@@ -124,20 +125,57 @@ def is_valid(color, x, y, chessboard):
     return False
 
 
-@jit(nopython=True)
+# @jit(nopython=True)
 def get_value(chessboard, num):
     result = 0
-    for i in range(8):
-        for j in range(8):
-            if chessboard[i][j] == color:
-                if table:
-                    result += valueBoard[i][j]
-                result -= disk
-            elif chessboard[i][j] == -color:
-                result += disk
-            elif is_valid(-color, i, j, chessboard):
-                result -= mobile
-    result += num * mobile
+    if cnt > 20:
+        for i in range(8):
+            for j in range(8):
+                if chessboard[i][j] == color:
+                    if table:
+                        result += valueBoard[i][j]
+                    result -= disk
+                elif chessboard[i][j] == -color:
+                    result += disk
+                elif is_valid(-color, i, j, chessboard):
+                    result -= mobile
+        result += num * mobile
+    else:
+        for i in range(8):
+            for j in range(8):
+                if chessboard[i][j] == color:
+                    if table:
+                        result += valueBoard[i][j]
+        for i in range(2):
+            i = 7 * i
+            for j in range(2):
+                j = 7 * j
+                if chessboard[i][j] == -color:
+                    result += stable
+                    for m in range(6):
+                        if i == 7:
+                            x = 6 - m
+                        else:
+                            x = m + 1
+                        if chessboard[x][j] == -color:
+                            result += stable
+                            if m == 5 and i == 0:
+                                if chessboard[7][j] == -color:
+                                    result -= 6 * stable
+                        else:
+                            break
+                    for m in range(6):
+                        if j == 7:
+                            y = 6 - m
+                        else:
+                            y = m + 1
+                        if chessboard[i][y] == -color:
+                            result += stable
+                            if m == 5 and j == 0:
+                                if chessboard[i][7] == -color:
+                                    result -= 6 * stable
+                        else:
+                            break
     for i in range(2):
         i = 7 * i
         for j in range(2):
@@ -171,7 +209,6 @@ def get_value(chessboard, num):
     return result
 
 
-@lru_cache()
 def search(self):
     if self.ply == Node.depth:
         self.alpha = get_value(self.chessboard, len(self.parent.children))
@@ -266,7 +303,6 @@ class Node(object):
     depth = 3
     final_depth = 9
 
-    @lru_cache()
     def final_search(self):
         final = True
         self_cnt = 0
