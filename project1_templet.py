@@ -9,22 +9,22 @@ COLOR_BLACK = -1
 COLOR_WHITE = 1
 COLOR_NONE = 0
 random.seed(0)
-table = True
+table = False
 # block = True
 color = 0
 stable = 30
-disk = 10
+disk = 40
 mobile = 50
 final_depth = 9
 cnt = 0
-valueBoard = np.array([[-199, 48, -8, 6, 6, -8, 48, -199],
+valueBoard = np.array([[-99, 48, -8, 6, 6, -8, 48, -99],
                        [48, -8, -16, 3, 3, -16, -8, 48],
                        [-8, -16, 4, 4, 4, 4, -16, -8],
                        [6, 1, 2, 0, 0, 2, 1, 6],
                        [6, 1, 2, 0, 0, 2, 1, 6],
                        [-8, -16, 4, 4, 4, 4, -16, -8],
                        [48, -8, -16, 3, 3, -16, -8, 48],
-                       [-199, 48, -8, 6, 6, -8, 48, -199]])
+                       [-99, 48, -8, 6, 6, -8, 48, -99]])
 
 
 # don't change the class name
@@ -160,11 +160,10 @@ def get_value(chessboard, num):
         for i in range(8):
             for j in range(8):
                 if chessboard[i][j] == color:
-                    if table:
-                        result += valueBoard[i][j]
-                    result -= disk
-                elif chessboard[i][j] == -color:
-                    result += disk
+                    result += valueBoard[i][j]
+                    # result -= disk
+                # elif chessboard[i][j] == -color:
+                #     result += disk
         for i in range(2):
             i = 7 * i
             for j in range(2):
