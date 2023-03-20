@@ -12,8 +12,8 @@ random.seed(0)
 table = False
 # block = True
 color = 0
-stable = 30
-disk = 40
+stable = 20
+disk = 50
 mobile = 50
 final_depth = 9
 cnt = 0
