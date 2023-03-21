@@ -268,7 +268,7 @@ def search(self):
             if self.alpha >= self.beta:
                 self.beta = self.alpha
                 return 1
-        if time.time() - Node.time > 5 - 0.1 * Node.depth:
+        if time.time() - Node.time > 5 - 0.14 * (Node.depth - 1):
             return 0
     return 1
 
