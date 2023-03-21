@@ -15,7 +15,7 @@ color = 0
 stable = 30
 disk = 10
 mobile = 80
-final_depth = 9
+final_depth = 11
 cnt = 0
 valueBoard = np.array([[-99, 48, -8, 6, 6, -8, 48, -99],
                        [48, -8, -16, 3, 3, -16, -8, 48],
@@ -65,7 +65,7 @@ class AI(object):
                 root = Node(0, -1, 0, -100000, 100000, -self.color, True, chessboard)
                 root.final_search()
                 print(root.alpha)
-                if root.alpha == 1:
+                if root.alpha >= 0:
                     self.candidate_list.append(root.step)
                     final = True
             # elif cnt <= 20:
@@ -99,7 +99,7 @@ class AI(object):
                         print(root.step)
                         print(time.time() - Node.time)
                     Node.depth += 1
-
+            print(self.candidate_list)
             # Here is the simplest sample:Random decision
     # idx = np.where(chessboard == COLOR_NONE)
     # idx = list(zip(idx[0], idx[1]))
@@ -268,7 +268,7 @@ def search(self):
             if self.alpha >= self.beta:
                 self.beta = self.alpha
                 return 1
-        if time.time() - Node.time > 4.2:
+        if time.time() - Node.time > 5 - 0.1 * Node.depth:
             return 0
     return 1
 
@@ -378,6 +378,6 @@ class Node(object):
                 if self.alpha >= self.beta:
                     self.beta = self.alpha
                     return 1
-            # if time.time() - Node.time > 4.95:
-            #     return 0
+            if time.time() - Node.time > 5 - 0.1 * cnt:
+                return 0
         return 1
