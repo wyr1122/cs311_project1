@@ -20,7 +20,7 @@ disk = 50
 mobile = 80
 final_mobile = 20
 final_stable = 50
-final_depth = 14
+final_depth = 12
 
 valueBoard = np.array([[-399, 88, -8, 6, 6, -8, 88, -399],
                        [88, -8, -16, 3, 3, -16, -8, 88],
@@ -64,7 +64,7 @@ class AI(object):
         # print(root.get_value())
         if len(self.candidate_list) != 0:
             start = time.time()
-            depth = 4
+            depth = 2
             final = False
             if cnt <= final_depth:
                 v, step = final_search(chessboard, -color, -10000, 10000, 0, True)
@@ -76,7 +76,7 @@ class AI(object):
                         self.candidate_list.append(step)
                         final = True
             if not final:
-                for i in range(8):
+                for i in range(10):
                     # root = Node(0, -1, 0, -100000, 100000, -self.color, True, chessboard)
                     v, step = search(chessboard, -color, -10000, 10000, 0, True, 0)
                     print(depth)
@@ -146,8 +146,7 @@ def search(chessboard, c, alpha, beta, ply, is_max_node, num):
                 step = [x, y]
             if alpha >= beta:
                 return alpha, step
-        # if time.time() - start > 5 - 0.2 * (depth - 3):
-        if time.time() - start > 4.8:
+        if time.time() - start > 5 - 0.15 * (depth - 3):
             return 0, [-1, 0]
     if is_max_node:
         return alpha, step
@@ -199,7 +198,7 @@ def final_search(chessboard, c, alpha, beta, ply, is_max_node):
             if alpha >= beta:
                 return alpha, step
         # if time.time() - start > 5 - 0.08 * cnt:
-        if time.time() - start > 4.2:
+        if time.time() - start > 3.5:
             return -111, [-1, 0]
     if is_max_node:
         return alpha, step
