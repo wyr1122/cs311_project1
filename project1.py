@@ -18,16 +18,16 @@ stable = 30
 disk = 10
 mobile = 80
 depth = 3
-final_depth = 14
+final_depth = 13
 
-valueBoard = np.array([[-199, 48, -8, 6, 6, -8, 48, -199],
+valueBoard = np.array([[-299, 48, -8, 6, 6, -8, 48, -299],
                        [48, -8, -16, 3, 3, -16, -8, 48],
                        [-8, -16, 4, 4, 4, 4, -16, -8],
                        [6, 1, 2, 0, 0, 2, 1, 6],
                        [6, 1, 2, 0, 0, 2, 1, 6],
                        [-8, -16, 4, 4, 4, 4, -16, -8],
                        [48, -8, -16, 3, 3, -16, -8, 48],
-                       [-199, 48, -8, 6, 6, -8, 48, -199]])
+                       [-299, 48, -8, 6, 6, -8, 48, -299]])
 
 
 # don't change the class name
@@ -347,7 +347,7 @@ def get_stable(chessboard, c):
     return result
 
 
-# @jit(nopython=True)
+@jit(nopython=True)
 def get_value(chessboard, num):
     result = 0
     # if cnt > 18:
