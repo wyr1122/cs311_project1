@@ -11,24 +11,25 @@ random.seed(0)
 color = 0
 cnt = 0
 start = 0
+depth = 0
 
 # args
 table = True
 stable = 30
-final_stable = 40
-disk = 10
+disk = 50
 mobile = 80
-depth = 3
+final_mobile = 20
+final_stable = 50
 final_depth = 14
 
-valueBoard = np.array([[-99, 48, -8, 6, 6, -8, 48, -99],
-                       [48, -8, -16, 3, 3, -16, -8, 48],
+valueBoard = np.array([[-399, 88, -8, 6, 6, -8, 88, -399],
+                       [88, -8, -16, 3, 3, -16, -8, 88],
                        [-8, -16, 4, 4, 4, 4, -16, -8],
                        [6, 1, 2, 0, 0, 2, 1, 6],
                        [6, 1, 2, 0, 0, 2, 1, 6],
                        [-8, -16, 4, 4, 4, 4, -16, -8],
-                       [48, -8, -16, 3, 3, -16, -8, 48],
-                       [-99, 48, -8, 6, 6, -8, 48, -99]])
+                       [88, -8, -16, 3, 3, -16, -8, 88],
+                       [-399, 88, -8, 6, 6, -8, 88, -399]])
 
 
 # don't change the class name
@@ -71,27 +72,9 @@ class AI(object):
                 print(time.time() - start)
                 if step[0] >= 0:
                     if v >= 0:
+                        print(step)
                         self.candidate_list.append(step)
                         final = True
-            # elif cnt <= 20:
-            #     table = True
-            #     stable = 40
-            #     mobile = 100
-            #     disk = 30
-            # for i in range(8):
-            #     if cnt - Node.depth <= 8:
-            #         break
-            #     root = Node(0, -1, 0, -100000, 100000, -self.color, True, chessboard)
-            #     m = search(root)
-            #     if m == 1:
-            #         if i > 0:
-            #             self.candidate_list.pop()
-            #         self.candidate_list.append(root.step)
-            #         print(Node.depth)
-            #         print(root.step)
-            #         print(time.time() - Node.time)
-            #     Node.depth += 1
-            # else:
             if not final:
                 for i in range(8):
                     # root = Node(0, -1, 0, -100000, 100000, -self.color, True, chessboard)
@@ -163,7 +146,8 @@ def search(chessboard, c, alpha, beta, ply, is_max_node, num):
                 step = [x, y]
             if alpha >= beta:
                 return alpha, step
-        if time.time() - start > 5 - 0.2 * (depth - 3):
+        # if time.time() - start > 5 - 0.2 * (depth - 3):
+        if time.time() - start > 4.8:
             return 0, [-1, 0]
     if is_max_node:
         return alpha, step
@@ -214,8 +198,9 @@ def final_search(chessboard, c, alpha, beta, ply, is_max_node):
                 step = [x, y]
             if alpha >= beta:
                 return alpha, step
-        if time.time() - start > 5 - 0.08 * cnt:
-            return 0, [-1, 0]
+        # if time.time() - start > 5 - 0.08 * cnt:
+        if time.time() - start > 4.2:
+            return -111, [-1, 0]
     if is_max_node:
         return alpha, step
     else:
@@ -262,6 +247,41 @@ def get_moves(chessboard, c):
             if is_valid(c, i, j, chessboard):
                 moves.append([i, j])
     return moves
+
+
+@jit(nopython=True)
+def get_value(chessboard, num):
+    result = 0
+    if cnt > 30:
+        for i in range(8):
+            for j in range(8):
+                if chessboard[i][j] == color:
+                    # if table:
+                    #     result += valueBoard[i][j]
+                    result -= disk
+                elif chessboard[i][j] == -color:
+                    # if table:
+                    #     result -= valueBoard[i][j]
+                    result += disk
+                elif is_valid(-color, i, j, chessboard):
+                    result -= mobile
+        result += num * mobile
+        result -= get_stable(chessboard, color) * stable
+    else:
+        for i in range(8):
+            for j in range(8):
+                if chessboard[i][j] == color:
+                    if table:
+                        result += valueBoard[i][j]
+                elif chessboard[i][j] == -color:
+                    if table:
+                        result -= valueBoard[i][j]
+                # elif is_valid(-color, i, j, chessboard):
+                #     result -= final_mobile
+        result += num * final_mobile
+        result += get_stable(chessboard, -color) * final_stable
+        result -= get_stable(chessboard, color) * final_stable
+    return result
 
 
 @jit(nopython=True)
@@ -345,40 +365,6 @@ def get_stable(chessboard, c):
         for j in range(8):
             if stable_board[i][j] == 1:
                 result += 1
-    return result
-
-
-@jit(nopython=True)
-def get_value(chessboard, num):
-    result = 0
-    # if cnt > 18:
-    for i in range(8):
-        for j in range(8):
-            if chessboard[i][j] == color:
-                if table:
-                    result += valueBoard[i][j]
-                result -= disk
-            elif chessboard[i][j] == -color:
-                if table:
-                    result -= valueBoard[i][j]
-                result += disk
-            elif is_valid(-color, i, j, chessboard):
-                result -= mobile
-    result += num * mobile
-    # else:
-    #     for i in range(8):
-    #         for j in range(8):
-    #             if chessboard[i][j] == color:
-    #                 result += valueBoard[i][j]
-    #                 result -= disk
-    #             elif chessboard[i][j] == -color:
-    #                 result += disk
-    if cnt <= 20:
-        result += get_stable(chessboard, -color) * final_stable
-        result -= get_stable(chessboard, color) * final_stable
-    else:
-        # result += get_stable(chessboard, -color) * stable
-        result -= get_stable(chessboard, color) * stable
     return result
 
 
