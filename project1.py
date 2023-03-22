@@ -2,22 +2,24 @@ import numpy as np
 import random
 import time
 from numba import jit
-from functools import lru_cache
+from functools import lru_cache, wraps
 
 COLOR_BLACK = -1
 COLOR_WHITE = 1
 COLOR_NONE = 0
 random.seed(0)
-table = True
-# block = True
 color = 0
+cnt = 0
+start = 0
+
+# args
+table = True
 stable = 30
 disk = 10
 mobile = 80
 depth = 3
-final_depth = 11
-cnt = 0
-start = 0
+final_depth = 14
+
 valueBoard = np.array([[-199, 48, -8, 6, 6, -8, 48, -199],
                        [48, -8, -16, 3, 3, -16, -8, 48],
                        [-8, -16, 4, 4, 4, 4, -16, -8],
@@ -32,10 +34,10 @@ valueBoard = np.array([[-199, 48, -8, 6, 6, -8, 48, -199],
 
 class AI(object):
     # chessboard_size, color, time_out passed from agent
-    def __init__(self, chessboard_size, color, time_out):
+    def __init__(self, chessboard_size, c, time_out):
         self.chessboard_size = chessboard_size
         # You are white or black
-        self.color = color
+        self.color = c
         # the max time you should use, your algorithm's run time must not exceed the time limit.
         self.time_out = time_out
         # You need to add your decision to your candidate_list. The system will get the end of your candidate_list as
@@ -63,11 +65,13 @@ class AI(object):
             depth = 4
             final = False
             if cnt <= final_depth:
-                v, step = search(chessboard, -color, -10000, 10000, 0, True, 0)
+                v, step = final_search(chessboard, -color, -10000, 10000, 0, True)
                 print(v)
-                if v >= 0:
-                    self.candidate_list.append(step)
-                    final = True
+                print(time.time() - start)
+                if step[0] >= 0:
+                    if v >= 0:
+                        self.candidate_list.append(step)
+                        final = True
             # elif cnt <= 20:
             #     table = True
             #     stable = 40
@@ -88,16 +92,17 @@ class AI(object):
             #     Node.depth += 1
             # else:
             if not final:
-                for i in range(6):
+                for i in range(8):
                     # root = Node(0, -1, 0, -100000, 100000, -self.color, True, chessboard)
                     v, step = search(chessboard, -color, -10000, 10000, 0, True, 0)
+                    print(depth)
                     if step[0] >= 0:
                         if i > 0:
                             self.candidate_list.pop()
                         self.candidate_list.append(step)
-                        print(depth)
+                        print(v)
                         print(step)
-                        print(time.time() - start)
+                    print(time.time() - start)
                     depth += 1
             print(self.candidate_list)
             # Here is the simplest sample:Random decision
@@ -116,16 +121,35 @@ class AI(object):
     # If there is no valid position, you must return an empty
 
 
+# def np_cache(function):
+#     @lru_cache()
+#     def cached_wrapper(hashable_array, c, alpha, beta, ply, is_max_node, num):
+#         array = np.array(hashable_array)
+#         return function(array, c, alpha, beta, ply, is_max_node, num)
+#
+#     @wraps(function)
+#     def wrapper(array, c, alpha, beta, ply, is_max_node, num):
+#         return cached_wrapper(tuple(array), c, alpha, beta, ply, is_max_node, num)
+#
+#     # copy lru_cache attributes over too
+#     wrapper.cache_info = cached_wrapper.cache_info
+#     wrapper.cache_clear = cached_wrapper.cache_clear
+#
+#     return wrapper
+
+
 # @lru_cache()
-def search(chessboard, color, alpha, beta, ply, is_max_node, num):
+def search(chessboard, c, alpha, beta, ply, is_max_node, num):
+    chessboard = np.array(chessboard)
     if ply == depth:
         return get_value(chessboard, num), [-1, 0]
-    moves = get_moves(chessboard, -color)
+    moves = get_moves(chessboard, -c)
     step = [-1, 0]
     if len(moves) == 0:
-        search(chessboard, -color, alpha, beta, ply + 1, not is_max_node, 0)
+        moves.append([-1, 0])
+        # search(chessboard, -c, alpha, beta, ply + 1, not is_max_node, 0)
     for x, y in moves:
-        v, _ = search(move(chessboard, x, y, -color), -color, alpha, beta, ply + 1, not is_max_node, len(moves))
+        v, _ = search(move(chessboard, x, y, -c), -c, alpha, beta, ply + 1, not is_max_node, len(moves))
         if is_max_node:
             if v > alpha:
                 alpha = v
@@ -146,11 +170,11 @@ def search(chessboard, color, alpha, beta, ply, is_max_node, num):
         return beta, step
 
 
-def final_search(chessboard, color, alpha, beta, ply, is_max_node, num):
+def final_search(chessboard, c, alpha, beta, ply, is_max_node):
     final = True
     self_cnt = 0
     other_cnt = 0
-    moves = get_moves(chessboard, -color)
+    moves = get_moves(chessboard, -c)
     step = [-1, 0]
     for i in range(8):
         for j in range(8):
@@ -158,9 +182,9 @@ def final_search(chessboard, color, alpha, beta, ply, is_max_node, num):
                 self_cnt += 1
             elif chessboard[i][j] == -color:
                 other_cnt += 1
-            if is_valid(color, i, j, chessboard):
+            if is_valid(c, i, j, chessboard):
                 final = False
-            if is_valid(-color, i, j, chessboard):
+            if is_valid(-c, i, j, chessboard):
                 final = False
                 # child = Node(self, i, j, self.alpha, self.beta, -self.color, not self.is_max_node)
                 # self.children.append(child)
@@ -173,9 +197,10 @@ def final_search(chessboard, color, alpha, beta, ply, is_max_node, num):
             result = -1
         return result, [-1, 0]
     if len(moves) == 0:
-        final_search(chessboard, -color, alpha, beta, ply + 1, not is_max_node, 0)
+        moves.append([-1, 0])
+        # final_search(chessboard, -c, alpha, beta, ply + 1, not is_max_node)
     for x, y in moves:
-        v, _ = final_search(move(chessboard, x, y, -color), -color, alpha, beta, ply + 1, not is_max_node, len(moves))
+        v, _ = final_search(move(chessboard, x, y, -c), -c, alpha, beta, ply + 1, not is_max_node)
         if is_max_node:
             if v > alpha:
                 alpha = v
@@ -188,7 +213,7 @@ def final_search(chessboard, color, alpha, beta, ply, is_max_node, num):
                 step = [x, y]
             if alpha >= beta:
                 return alpha, step
-        if time.time() - start > 5 - 0.2 * (depth - 3):
+        if time.time() - start > 5 - 0.08 * cnt:
             return 0, [-1, 0]
     if is_max_node:
         return alpha, step
@@ -197,31 +222,31 @@ def final_search(chessboard, color, alpha, beta, ply, is_max_node, num):
 
 
 @jit(nopython=True)
-def is_valid(color, x, y, chessboard):
+def is_valid(c, x, y, chessboard):
     if chessboard[x][y] != COLOR_NONE:
         return False
     for i in range(8):
         for j in range(8):
             result = 1
-            if chessboard[i][j] == color and (abs(x - i) > 1 or abs(y - j) > 1):
+            if chessboard[i][j] == c and (abs(x - i) > 1 or abs(y - j) > 1):
                 if abs(x - i) == abs(y - j):
                     for k in range(abs(x - i) - 1):
                         k = k + 1
-                        if chessboard[x + abs(i - x) // (i - x) * k][y + abs(j - y) // (j - y) * k] != -color:
+                        if chessboard[x + abs(i - x) // (i - x) * k][y + abs(j - y) // (j - y) * k] != -c:
                             result = 0
                     if result:
                         return True
                 if i == x:
                     for k in range(abs(j - y) - 1):
                         k = k + 1
-                        if chessboard[i][y + abs(j - y) // (j - y) * k] != -color:
+                        if chessboard[i][y + abs(j - y) // (j - y) * k] != -c:
                             result = 0
                     if result:
                         return True
                 if j == y:
                     for k in range(abs(i - x) - 1):
                         k = k + 1
-                        if chessboard[x + abs(i - x) // (i - x) * k][j] != -color:
+                        if chessboard[x + abs(i - x) // (i - x) * k][j] != -c:
                             result = 0
                     if result:
                         return True
@@ -229,16 +254,100 @@ def is_valid(color, x, y, chessboard):
 
 
 @jit(nopython=True)
-def get_moves(chessboard, color):
+def get_moves(chessboard, c):
     moves = []
     for i in range(8):
         for j in range(8):
-            if is_valid(color, i, j, chessboard):
+            if is_valid(c, i, j, chessboard):
                 moves.append([i, j])
     return moves
 
 
 @jit(nopython=True)
+def get_stable(chessboard, c):
+    result = 0
+    stable_board = [[0] * 8 for _ in range(8)]
+    for i in range(2):
+        i = 7 * i
+        for j in range(2):
+            j = 7 * j
+            if chessboard[i][j] == c:
+                stable_board[i][j] = 1
+                for m in range(6):
+                    if i == 7:
+                        x = 6 - m
+                    else:
+                        x = m + 1
+                    if chessboard[x][j] == c:
+                        stable_board[x][j] = 1
+                    else:
+                        break
+                for m in range(6):
+                    if j == 7:
+                        y = 6 - m
+                    else:
+                        y = m + 1
+                    if chessboard[i][y] == c:
+                        stable_board[i][y] = 1
+                    else:
+                        break
+    directions = [(1, 0), (1, 1), (-1, 1), (0, 1)]
+    for i in range(8):
+        for j in range(8):
+            if chessboard[i][j] == c:
+                stb = True
+                for direction in directions:
+                    stb_line = True
+                    x = i
+                    y = j
+                    while 0 <= x < 8 and 0 <= y < 8:
+                        if chessboard[x][y] == 0:
+                            stb_line = False
+                            break
+                        x += direction[0]
+                        y += direction[1]
+                    x = i
+                    y = j
+                    while 0 <= x < 8 and 0 <= y < 8:
+                        if chessboard[x][y] == 0:
+                            stb_line = False
+                            break
+                        x -= direction[0]
+                        y -= direction[1]
+                    x = i
+                    y = j
+                    stb_fix = True
+                    while 0 <= x < 8 and 0 <= y < 8:
+                        if chessboard[x][y] != c:
+                            stb_fix = False
+                            break
+                        x += direction[0]
+                        y += direction[1]
+                    if stb_fix:
+                        stb_line = True
+                    x = i
+                    y = j
+                    stb_fix = True
+                    while 0 <= x < 8 and 0 <= y < 8:
+                        if chessboard[x][y] != c:
+                            stb_fix = False
+                            break
+                        x -= direction[0]
+                        y -= direction[1]
+                    if stb_fix:
+                        stb_line = True
+                    if not stb_line:
+                        stb = False
+                if stb:
+                    stable_board[i][j] = 1
+    for i in range(8):
+        for j in range(8):
+            if stable_board[i][j] == 1:
+                result += 1
+    return result
+
+
+# @jit(nopython=True)
 def get_value(chessboard, num):
     result = 0
     # if cnt > 18:
@@ -264,66 +373,8 @@ def get_value(chessboard, num):
     #             elif chessboard[i][j] == -color:
     #                 result += disk
     if cnt <= 20:
-        for i in range(2):
-            i = 7 * i
-            for j in range(2):
-                j = 7 * j
-                if chessboard[i][j] == -color:
-                    result += stable
-                    for m in range(6):
-                        if i == 7:
-                            x = 6 - m
-                        else:
-                            x = m + 1
-                        if chessboard[x][j] == -color:
-                            result += stable
-                            if m == 5 and i == 0:
-                                if chessboard[7][j] == -color:
-                                    result -= 6 * stable
-                        else:
-                            break
-                    for m in range(6):
-                        if j == 7:
-                            y = 6 - m
-                        else:
-                            y = m + 1
-                        if chessboard[i][y] == -color:
-                            result += stable
-                            if m == 5 and j == 0:
-                                if chessboard[i][7] == -color:
-                                    result -= 6 * stable
-                        else:
-                            break
-    for i in range(2):
-        i = 7 * i
-        for j in range(2):
-            j = 7 * j
-            if chessboard[i][j] == color:
-                result -= stable
-                for m in range(6):
-                    if i == 7:
-                        x = 6 - m
-                    else:
-                        x = m + 1
-                    if chessboard[x][j] == color:
-                        result -= stable
-                        if m == 5 and i == 0:
-                            if chessboard[7][j] == color:
-                                result += 6 * stable
-                    else:
-                        break
-                for m in range(6):
-                    if j == 7:
-                        y = 6 - m
-                    else:
-                        y = m + 1
-                    if chessboard[i][y] == color:
-                        result -= stable
-                        if m == 5 and j == 0:
-                            if chessboard[i][7] == color:
-                                result += 6 * stable
-                    else:
-                        break
+        result += get_stable(chessboard, -color) * stable
+    result -= get_stable(chessboard, color) * stable
     return result
 
 
