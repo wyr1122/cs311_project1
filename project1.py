@@ -377,7 +377,7 @@ def get_value(chessboard, num):
         result += get_stable(chessboard, -color) * final_stable
         result -= get_stable(chessboard, color) * final_stable
     else:
-        result += get_stable(chessboard, -color) * stable
+        # result += get_stable(chessboard, -color) * stable
         result -= get_stable(chessboard, color) * stable
     return result
 
