@@ -15,19 +15,20 @@ start = 0
 # args
 table = True
 stable = 30
+final_stable = 40
 disk = 10
 mobile = 80
 depth = 3
-final_depth = 13
+final_depth = 14
 
-valueBoard = np.array([[-299, 48, -8, 6, 6, -8, 48, -299],
+valueBoard = np.array([[-99, 48, -8, 6, 6, -8, 48, -99],
                        [48, -8, -16, 3, 3, -16, -8, 48],
                        [-8, -16, 4, 4, 4, 4, -16, -8],
                        [6, 1, 2, 0, 0, 2, 1, 6],
                        [6, 1, 2, 0, 0, 2, 1, 6],
                        [-8, -16, 4, 4, 4, 4, -16, -8],
                        [48, -8, -16, 3, 3, -16, -8, 48],
-                       [-299, 48, -8, 6, 6, -8, 48, -299]])
+                       [-99, 48, -8, 6, 6, -8, 48, -99]])
 
 
 # don't change the class name
@@ -373,8 +374,11 @@ def get_value(chessboard, num):
     #             elif chessboard[i][j] == -color:
     #                 result += disk
     if cnt <= 20:
+        result += get_stable(chessboard, -color) * final_stable
+        result -= get_stable(chessboard, color) * final_stable
+    else:
         result += get_stable(chessboard, -color) * stable
-    result -= get_stable(chessboard, color) * stable
+        result -= get_stable(chessboard, color) * stable
     return result
 
 
