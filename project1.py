@@ -1,7 +1,7 @@
 import numpy as np
 import random
 import time
-from numba import jit
+from numba import njit, objmode
 from functools import lru_cache, wraps
 
 COLOR_BLACK = -1
@@ -77,7 +77,6 @@ class AI(object):
                         final = True
             if not final:
                 for i in range(10):
-                    # root = Node(0, -1, 0, -100000, 100000, -self.color, True, chessboard)
                     v, step = search(chessboard, -color, -10000, 10000, 0, True, 0)
                     print(depth)
                     if step[0] >= 0:
@@ -124,7 +123,6 @@ class AI(object):
 
 # @lru_cache()
 def search(chessboard, c, alpha, beta, ply, is_max_node, num):
-    chessboard = np.array(chessboard)
     if ply == depth:
         return get_value(chessboard, num), [-1, 0]
     moves = get_moves(chessboard, -c)
@@ -146,7 +144,11 @@ def search(chessboard, c, alpha, beta, ply, is_max_node, num):
                 step = [x, y]
             if alpha >= beta:
                 return alpha, step
-        if time.time() - start > 5 - 0.15 * (depth - 3):
+        t = time.time()
+        # with objmode(t='int32'):
+        #     t = time.time()
+        # if t - start > 5 - 0.15 * (depth - 3):
+        if t - start > 4.5:
             return 0, [-1, 0]
     if is_max_node:
         return alpha, step
@@ -206,7 +208,7 @@ def final_search(chessboard, c, alpha, beta, ply, is_max_node):
         return beta, step
 
 
-@jit(nopython=True)
+@njit()
 def is_valid(c, x, y, chessboard):
     if chessboard[x][y] != COLOR_NONE:
         return False
@@ -238,7 +240,7 @@ def is_valid(c, x, y, chessboard):
     return False
 
 
-@jit(nopython=True)
+@njit()
 def get_moves(chessboard, c):
     moves = []
     for i in range(8):
@@ -248,7 +250,7 @@ def get_moves(chessboard, c):
     return moves
 
 
-@jit(nopython=True)
+@njit()
 def get_value(chessboard, num):
     result = 0
     if cnt > 30:
@@ -283,7 +285,7 @@ def get_value(chessboard, num):
     return result
 
 
-@jit(nopython=True)
+@njit()
 def get_stable(chessboard, c):
     result = 0
     stable_board = [[0] * 8 for _ in range(8)]
@@ -367,7 +369,7 @@ def get_stable(chessboard, c):
     return result
 
 
-@jit(nopython=True)
+@njit()
 def move(cb, x, y, color):
     chessboard = cb.copy()
     if x >= 0:
