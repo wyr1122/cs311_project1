@@ -150,7 +150,7 @@ def search(chessboard, c, alpha, beta, ply, is_max_node, num):
         # with objmode(t='int32'):
         #     t = time.time()
         # if t - start > 5 - 0.15 * (depth - 3):
-        if t - start > 4.5:
+        if t - start > 4:
             return 0, [-1, 0]
     if is_max_node:
         return alpha, step
@@ -183,11 +183,9 @@ def final_search(chessboard, c, alpha, beta, ply, is_max_node):
         else:
             result = -1
         return result, [-1, 0]
-    moves = get_moves(chessboard, -c, 0, ply < heuristic_cutoffs_depth)
+    moves = get_moves(chessboard, -c, 0, False)
     if len(moves) == 0:
         moves.append([-1, 0, 0])
-    if ply < heuristic_cutoffs_depth:
-        moves.sort(reverse=True)
     for _, x, y in moves:
         v, _ = final_search(move(chessboard, x, y, -c), -c, alpha, beta, ply + 1, not is_max_node)
         if is_max_node:
