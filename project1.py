@@ -21,6 +21,7 @@ mobile = 80
 final_mobile = 20
 final_stable = 50
 final_depth = 12
+heuristic_cutoffs_depth = 3
 
 valueBoard = np.array([[-399, 88, -8, 6, 6, -8, 88, -399],
                        [88, -8, -16, 3, 3, -16, -8, 88],
@@ -125,12 +126,13 @@ class AI(object):
 def search(chessboard, c, alpha, beta, ply, is_max_node, num):
     if ply == depth:
         return get_value(chessboard, num), [-1, 0]
-    moves = get_moves(chessboard, -c)
+    moves = get_moves(chessboard, -c, num, ply < heuristic_cutoffs_depth)
     step = [-1, 0]
     if len(moves) == 0:
-        moves.append([-1, 0])
-        # search(chessboard, -c, alpha, beta, ply + 1, not is_max_node, 0)
-    for x, y in moves:
+        moves.append([0, -1, 0])
+    if ply < heuristic_cutoffs_depth:
+        moves.sort(reverse=True)
+    for _, x, y in moves:
         v, _ = search(move(chessboard, x, y, -c), -c, alpha, beta, ply + 1, not is_max_node, len(moves))
         if is_max_node:
             if v > alpha:
@@ -160,7 +162,6 @@ def final_search(chessboard, c, alpha, beta, ply, is_max_node):
     final = True
     self_cnt = 0
     other_cnt = 0
-    moves = get_moves(chessboard, -c)
     step = [-1, 0]
     for i in range(8):
         for j in range(8):
@@ -182,10 +183,12 @@ def final_search(chessboard, c, alpha, beta, ply, is_max_node):
         else:
             result = -1
         return result, [-1, 0]
+    moves = get_moves(chessboard, -c, 0, ply < heuristic_cutoffs_depth)
     if len(moves) == 0:
-        moves.append([-1, 0])
-        # final_search(chessboard, -c, alpha, beta, ply + 1, not is_max_node)
-    for x, y in moves:
+        moves.append([-1, 0, 0])
+    if ply < heuristic_cutoffs_depth:
+        moves.sort(reverse=True)
+    for _, x, y in moves:
         v, _ = final_search(move(chessboard, x, y, -c), -c, alpha, beta, ply + 1, not is_max_node)
         if is_max_node:
             if v > alpha:
@@ -241,12 +244,16 @@ def is_valid(c, x, y, chessboard):
 
 
 @njit()
-def get_moves(chessboard, c):
+def get_moves(chessboard, c, num, evaluation):
     moves = []
     for i in range(8):
         for j in range(8):
             if is_valid(c, i, j, chessboard):
-                moves.append([i, j])
+                new_cb = move(chessboard, i, j, c)
+                if evaluation:
+                    moves.append([c * color * get_value(new_cb, num), i, j])
+                else:
+                    moves.append([0, i, j])
     return moves
 
 
