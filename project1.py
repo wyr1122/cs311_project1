@@ -2,16 +2,12 @@ import numpy as np
 import random
 import time
 from numba import njit, objmode
-from functools import lru_cache, wraps
 
 COLOR_BLACK = -1
 COLOR_WHITE = 1
 COLOR_NONE = 0
 random.seed(0)
-color = 0
 cnt = 0
-start = 0
-depth = 0
 
 # args
 table = True
@@ -20,7 +16,7 @@ disk = 50
 mobile = 80
 final_mobile = 20
 final_stable = 50
-final_depth = 12
+final_depth = 18
 
 valueBoard = np.array([[-99, 88, -8, 6, 6, -8, 88, -99],
                        [88, -8, -16, 3, 3, -16, -8, 88],
@@ -37,6 +33,7 @@ valueBoard = np.array([[-99, 88, -8, 6, 6, -8, 88, -99],
 class AI(object):
     # chessboard_size, color, time_out passed from agent
     def __init__(self, chessboard_size, c, time_out):
+        global start
         self.chessboard_size = chessboard_size
         # You are white or black
         self.color = c
@@ -45,14 +42,26 @@ class AI(object):
         # You need to add your decision to your candidate_list. The system will get the end of your candidate_list as
         # your decision.
         self.candidate_list = []
+        start = time.time()
+        color = -1
+        search(np.array([[0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, -1, 0, 0, 0, 0],
+                         [0, 0, 0, -1, -1, 0, 0, 0], [0, 0, 0, -1, 1, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0],
+                         [0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0]]), -color, -10000, 10000, 0, True, 0, 1,
+               start, color)
+        final_search(
+            np.array([[-1, -1, -1, -1, -1, -1, -1, 1], [-1, -1, -1, -1, 1, -1, 1, 1], [-1, 1, 1, 1, -1, 1, -1, 1],
+                      [-1, 1, 1, -1, 1, -1, 1, 1], [-1, 1, 1, -1, -1, 1, -1, 1], [-1, -1, -1, -1, -1, -1, 1, 1],
+                      [-1, -1, 1, 1, 1, 1, 1, 1], [-1, 1, 1, 1, 1, 1, 0, 0]]), -color, -10000, 10000, 0, True, start,
+            color)
 
-    # The input is the current chessboard. Chessboard is a numpy array.
+        # The input is the current chessboard. Chessboard is a numpy array.
+
     def go(self, chessboard):
         # Clear candidate_list, must do this step
         self.candidate_list.clear()
         # ==================================================================
         # Write your algorithm here
-        global cnt, table, color, disk, stable, mobile, start, depth
+        global cnt, table, disk, stable, mobile
         cnt = 0
         color = self.color
         for x in range(8):
@@ -64,10 +73,10 @@ class AI(object):
         # print(root.get_value())
         if len(self.candidate_list) != 0:
             start = time.time()
-            depth = 2
+            depth = 4
             final = False
             if cnt <= final_depth:
-                v, step = final_search(chessboard, -color, -10000, 10000, 0, True)
+                v, step = final_search(chessboard, -color, -10000, 10000, 0, True, start, color)
                 print(v)
                 print(time.time() - start)
                 if step[0] >= 0:
@@ -77,8 +86,8 @@ class AI(object):
                         final = True
             if not final:
                 for i in range(10):
-                    v, step = search(chessboard, -color, -10000, 10000, 0, True, 0)
                     print(depth)
+                    v, step = search(chessboard, -color, -10000, 10000, 0, True, 0, depth, start, color)
                     if step[0] >= 0:
                         if i > 0:
                             self.candidate_list.pop()
@@ -121,17 +130,17 @@ class AI(object):
 #     return wrapper
 
 
-# @lru_cache()
-def search(chessboard, c, alpha, beta, ply, is_max_node, num):
+@njit()
+def search(chessboard, c, alpha, beta, ply, is_max_node, num, depth, start, color):
     if ply == depth:
-        return get_value(chessboard, num), [-1, 0]
+        return get_value(chessboard, num, color), [-1, 0]
     moves = get_moves(chessboard, -c)
     step = [-1, 0]
     if len(moves) == 0:
         moves.append([-1, 0])
-        # search(chessboard, -c, alpha, beta, ply + 1, not is_max_node, 0)
     for x, y in moves:
-        v, _ = search(move(chessboard, x, y, -c), -c, alpha, beta, ply + 1, not is_max_node, len(moves))
+        v, _ = search(move(chessboard, x, y, -c), -c, alpha, beta, ply + 1, not is_max_node, len(moves), depth, start,
+                      color)
         if is_max_node:
             if v > alpha:
                 alpha = v
@@ -144,11 +153,9 @@ def search(chessboard, c, alpha, beta, ply, is_max_node, num):
                 step = [x, y]
             if alpha >= beta:
                 return alpha, step
-        t = time.time()
-        # with objmode(t='int32'):
-        #     t = time.time()
-        if t - start > 5 - 0.15 * (depth - 1):
-            # if t - start > 4.5:
+        with objmode(t='f8'):
+            t = time.time()
+        if t - start > 4.99:
             return 0, [-1, 0]
     if is_max_node:
         return alpha, step
@@ -156,7 +163,8 @@ def search(chessboard, c, alpha, beta, ply, is_max_node, num):
         return beta, step
 
 
-def final_search(chessboard, c, alpha, beta, ply, is_max_node):
+@njit()
+def final_search(chessboard, c, alpha, beta, ply, is_max_node, start, color):
     final = True
     self_cnt = 0
     other_cnt = 0
@@ -172,8 +180,6 @@ def final_search(chessboard, c, alpha, beta, ply, is_max_node):
                 final = False
             if is_valid(-c, i, j, chessboard):
                 final = False
-                # child = Node(self, i, j, self.alpha, self.beta, -self.color, not self.is_max_node)
-                # self.children.append(child)
     if final:
         if self_cnt < other_cnt:
             result = 1
@@ -184,9 +190,8 @@ def final_search(chessboard, c, alpha, beta, ply, is_max_node):
         return result, [-1, 0]
     if len(moves) == 0:
         moves.append([-1, 0])
-        # final_search(chessboard, -c, alpha, beta, ply + 1, not is_max_node)
     for x, y in moves:
-        v, _ = final_search(move(chessboard, x, y, -c), -c, alpha, beta, ply + 1, not is_max_node)
+        v, _ = final_search(move(chessboard, x, y, -c), -c, alpha, beta, ply + 1, not is_max_node, start, color)
         if is_max_node:
             if v > alpha:
                 alpha = v
@@ -199,8 +204,9 @@ def final_search(chessboard, c, alpha, beta, ply, is_max_node):
                 step = [x, y]
             if alpha >= beta:
                 return alpha, step
-        # if time.time() - start > 5 - 0.08 * cnt:
-        if time.time() - start > 3.5:
+        with objmode(t='f8'):
+            t = time.time()
+        if t - start > 4.8:
             return -111, [-1, 0]
     if is_max_node:
         return alpha, step
@@ -251,7 +257,7 @@ def get_moves(chessboard, c):
 
 
 @njit()
-def get_value(chessboard, num):
+def get_value(chessboard, num, color):
     result = 0
     if cnt > 30:
         for i in range(8):
