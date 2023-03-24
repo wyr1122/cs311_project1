@@ -9,9 +9,10 @@ COLOR_NONE = 0
 random.seed(0)
 
 # args
+table = False
 stable = 30
 disk = 50
-mobile = 80
+mobile = 100
 final_mobile = 20
 final_stable = 50
 final_depth = 18
@@ -226,12 +227,12 @@ def get_value(chessboard, num, color, cnt):
         for i in range(8):
             for j in range(8):
                 if chessboard[i][j] == color:
-                    # if table:
-                    #     result += valueBoard[i][j]
+                    if table:
+                        result += valueBoard[i][j]
                     result -= disk
                 elif chessboard[i][j] == -color:
-                    # if table:
-                    #     result -= valueBoard[i][j]
+                    if table:
+                        result -= valueBoard[i][j]
                     result += disk
                 elif is_valid(-color, i, j, chessboard):
                     result -= mobile
