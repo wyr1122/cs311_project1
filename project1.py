@@ -10,12 +10,14 @@ random.seed(0)
 
 # args
 table = False
-stable = 30
+final_table = True
+stable = 100
 disk = 50
 mobile = 100
-final_mobile = 20
-final_stable = 50
-final_depth = 18
+final_mobile = 30
+final_stable = 60
+mid_depth = 30
+final_depth = 12
 final_search_depth = 6
 
 valueBoard = np.array([[-99, 48, -8, 6, 6, -8, 48, -99],
@@ -79,7 +81,7 @@ class AI(object):
                 print(v)
                 print(time.time() - start)
                 if step[0] >= 0:
-                    if v >= 0 or cnt >= final_search_depth:
+                    if v >= 0 or cnt > final_search_depth:
                         print(step)
                         self.candidate_list.append(step)
                         final = True
@@ -132,7 +134,7 @@ class AI(object):
 # @njit()
 def search(chessboard, c, alpha, beta, ply, is_max_node, num, depth, start, color, cnt):
     if ply == depth:
-        return get_value(chessboard, num, color, cnt), [-1, 0]
+        return get_value(chessboard, num, color, cnt, c), [-1, 0]
     moves = get_moves(chessboard, -c)
     step = [-1, 0]
     if len(moves) == 0:
@@ -191,7 +193,7 @@ def final_search(chessboard, c, ply, is_max_node, start, color, cnt):
         moves.append([-1, 0])
     if is_max_node:
         value = -2
-    elif cnt < final_search_depth:
+    elif cnt <= final_search_depth:
         value = 2
     else:
         value = 0
@@ -204,7 +206,7 @@ def final_search(chessboard, c, ply, is_max_node, start, color, cnt):
                 step = [x, y]
             if value == 1:
                 return value, step
-        elif cnt < final_search_depth:
+        elif cnt <= final_search_depth:
             if v < value:
                 value = v
                 step = [x, y]
@@ -215,15 +217,15 @@ def final_search(chessboard, c, ply, is_max_node, start, color, cnt):
             step = [x, y]
         with objmode(t='f8'):
             t = time.time()
-        if t - start > 4.8:
+        if t - start > 4.5:
             return -111, [-1, 0]
     return value, step
 
 
 # @njit()
-def get_value(chessboard, num, color, cnt):
+def get_value(chessboard, num, color, cnt, c):
     result = 0
-    if cnt > 30:
+    if cnt > mid_depth:
         for i in range(8):
             for j in range(8):
                 if chessboard[i][j] == color:
@@ -242,11 +244,15 @@ def get_value(chessboard, num, color, cnt):
         for i in range(8):
             for j in range(8):
                 if chessboard[i][j] == color:
-                    result += valueBoard[i][j]
+                    if final_table:
+                        result += valueBoard[i][j]
                 elif chessboard[i][j] == -color:
-                    result -= valueBoard[i][j]
+                    if final_table:
+                        result -= valueBoard[i][j]
                 elif is_valid(-color, i, j, chessboard):
                     result -= final_mobile
+        if (color == c and cnt % 2 == 0) or (color != c and cnt % 2 != 0):
+            result -= 200
         result += num * final_mobile
         result += get_stable(chessboard, -color) * final_stable
         result -= get_stable(chessboard, color) * final_stable
