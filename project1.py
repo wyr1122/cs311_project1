@@ -9,11 +9,11 @@ COLOR_NONE = 0
 random.seed(0)
 
 # args
-table = False
+table = True
 final_table = True
 stable = 100
-disk = 50
-mobile = 100
+disk = 80
+mobile = 120
 final_mobile = 30
 final_stable = 60
 mid_depth = 30
@@ -28,6 +28,15 @@ valueBoard = np.array([[-99, 48, -8, 6, 6, -8, 48, -99],
                        [-8, -16, 4, 4, 4, 4, -16, -8],
                        [48, -8, -16, 3, 3, -16, -8, 48],
                        [-99, 48, -8, 6, 6, -8, 48, -99]])
+
+final_valueBoard = np.array([[-199, 88, -8, 6, 6, -8, 88, -199],
+                             [88, -8, -16, 3, 3, -16, -8, 88],
+                             [-8, -16, 4, 4, 4, 4, -16, -8],
+                             [6, 1, 2, 0, 0, 2, 1, 6],
+                             [6, 1, 2, 0, 0, 2, 1, 6],
+                             [-8, -16, 4, 4, 4, 4, -16, -8],
+                             [88, -8, -16, 3, 3, -16, -8, 88],
+                             [-199, 88, -8, 6, 6, -8, 88, -199]])
 
 
 # don't change the class name
@@ -245,10 +254,10 @@ def get_value(chessboard, num, color, cnt, c):
             for j in range(8):
                 if chessboard[i][j] == color:
                     if final_table:
-                        result += valueBoard[i][j]
+                        result += final_valueBoard[i][j]
                 elif chessboard[i][j] == -color:
                     if final_table:
-                        result -= valueBoard[i][j]
+                        result -= final_valueBoard[i][j]
                 elif is_valid(-color, i, j, chessboard):
                     result -= final_mobile
         if (color == c and cnt % 2 == 0) or (color != c and cnt % 2 != 0):
