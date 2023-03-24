@@ -11,12 +11,13 @@ random.seed(0)
 # args
 table = False
 final_table = True
-stable = 80
+stable = 30
 disk = 50
 mobile = 80
 final_mobile = 20
-final_stable = 50
-mid_depth = 30
+final_stable = 60
+final_disk = 30
+mid_depth = 36
 final_depth = 12
 final_search_depth = 6
 
@@ -251,11 +252,13 @@ def get_value(chessboard, num, color, cnt, c):
                 if chessboard[i][j] == color:
                     if final_table:
                         result += final_valueBoard[i][j]
+                    result -= final_disk
                 elif chessboard[i][j] == -color:
                     if final_table:
                         result -= final_valueBoard[i][j]
-                # elif is_valid(-color, i, j, chessboard):
-                #     result -= final_mobile
+                    result += final_disk
+                elif is_valid(-c, i, j, chessboard):
+                    result -= color * c * final_mobile
         if (color == c and cnt % 2 == 0) or (color != c and cnt % 2 != 0):
             result -= 200
         result += num * color * c * final_mobile

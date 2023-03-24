@@ -367,7 +367,7 @@ chess = np.array([[[0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0,
 start = time.time()
 ai = AI(8, -1, 5)
 print(time.time() - start)
-chessboard = chess[49]
+chessboard = chess[41]
 # chessboard[7][6] = -1
 # chessboard[7][5] = -1
 # chessboard[6][5] = -1
@@ -381,8 +381,6 @@ print(chessboard)
 start = time.time()
 ai.go(chessboard)
 print(time.time() - start)
-
-
-# start = time.time()
-# ai.go(chessboard)
-# print(time.time() - start)
+start = time.time()
+ai.go(chessboard)
+print(time.time() - start)
