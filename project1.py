@@ -9,13 +9,13 @@ COLOR_NONE = 0
 random.seed(0)
 
 # args
-table = True
+table = False
 final_table = True
-stable = 100
-disk = 80
-mobile = 120
-final_mobile = 30
-final_stable = 60
+stable = 80
+disk = 50
+mobile = 80
+final_mobile = 20
+final_stable = 50
 mid_depth = 30
 final_depth = 12
 final_search_depth = 6
@@ -140,7 +140,7 @@ class AI(object):
 #     return wrapper
 
 
-# @njit()
+@njit()
 def search(chessboard, c, alpha, beta, ply, is_max_node, num, depth, start, color, cnt):
     if ply == depth:
         return get_value(chessboard, num, color, cnt, c), [-1, 0]
@@ -231,7 +231,7 @@ def final_search(chessboard, c, ply, is_max_node, start, color, cnt):
     return value, step
 
 
-# @njit()
+@njit()
 def get_value(chessboard, num, color, cnt, c):
     result = 0
     if cnt > mid_depth:
@@ -245,9 +245,9 @@ def get_value(chessboard, num, color, cnt, c):
                     if table:
                         result -= valueBoard[i][j]
                     result += disk
-                elif is_valid(-color, i, j, chessboard):
-                    result -= mobile
-        result += num * mobile
+                elif is_valid(-c, i, j, chessboard):
+                    result -= color * c * mobile
+        result += num * color * c * mobile
         result -= get_stable(chessboard, color) * stable
     else:
         for i in range(8):
@@ -258,11 +258,11 @@ def get_value(chessboard, num, color, cnt, c):
                 elif chessboard[i][j] == -color:
                     if final_table:
                         result -= final_valueBoard[i][j]
-                elif is_valid(-color, i, j, chessboard):
-                    result -= final_mobile
+                # elif is_valid(-color, i, j, chessboard):
+                #     result -= final_mobile
         if (color == c and cnt % 2 == 0) or (color != c and cnt % 2 != 0):
             result -= 200
-        result += num * final_mobile
+        result += num * color * c * final_mobile
         result += get_stable(chessboard, -color) * final_stable
         result -= get_stable(chessboard, color) * final_stable
     return result
