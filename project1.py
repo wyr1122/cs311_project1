@@ -140,9 +140,9 @@ class AI(object):
 @njit()
 def search(chessboard, c, alpha, beta, ply, is_max_node, num, depth, start, color, cnt):
     if ply == depth:
-        return get_value(chessboard, num, color, cnt, c), [-1, 0]
+        return get_value(chessboard, num, color, cnt, c), (-1, 0)
     moves = get_moves(chessboard, -c)
-    step = [-1, 0]
+    step = (-1, 0)
     if len(moves) == 0:
         moves.append([-1, 0])
     for x, y in moves:
@@ -151,19 +151,19 @@ def search(chessboard, c, alpha, beta, ply, is_max_node, num, depth, start, colo
         if is_max_node:
             if v > alpha:
                 alpha = v
-                step = [x, y]
+                step = (x, y)
             if alpha >= beta:
                 return beta, step
         else:
             if v < beta:
                 beta = v
-                step = [x, y]
+                step = (x, y)
             if alpha >= beta:
                 return alpha, step
         with objmode(t='f8'):
             t = time.time()
         if t - start > 4.99:
-            return 0, [-1, 0]
+            return 0, (-1, 0)
     if is_max_node:
         return alpha, step
     else:
@@ -176,7 +176,7 @@ def final_search(chessboard, c, ply, is_max_node, start, color, cnt):
     self_cnt = 0
     other_cnt = 0
     moves = get_moves(chessboard, -c)
-    step = [-1, 0]
+    step = (-1, 0)
     for i in range(8):
         for j in range(8):
             if chessboard[i][j] == color:
@@ -194,7 +194,7 @@ def final_search(chessboard, c, ply, is_max_node, start, color, cnt):
             result = 0
         else:
             result = -1
-        return result, [-1, 0]
+        return result, (-1, 0)
     if len(moves) == 0:
         moves.append([-1, 0])
     if is_max_node:
@@ -206,25 +206,27 @@ def final_search(chessboard, c, ply, is_max_node, start, color, cnt):
     for x, y in moves:
         v, _ = final_search(move(chessboard, x, y, -c), -c, ply + 1, not is_max_node, start, color,
                             cnt)
+        # if ply == 0:
+        #     print(x, y, v)
         if is_max_node:
             if v > value:
                 value = v
-                step = [x, y]
+                step = (x, y)
             if value == 1:
                 return value, step
         elif cnt <= final_search_depth:
             if v < value:
                 value = v
-                step = [x, y]
+                step = (x, y)
             if value == -1:
                 return value, step
         else:
             value += v / len(moves)
-            step = [x, y]
+            step = (x, y)
         with objmode(t='f8'):
             t = time.time()
         if t - start > 4.5:
-            return -111, [-1, 0]
+            return -111, (-1, 0)
     return value, step
 
 
