@@ -11,15 +11,15 @@ random.seed(0)
 # args
 table = False
 final_table = True
-stable = 30
+stable = 60
 disk = 50
-mobile = 80
-final_mobile = 20
+mobile = 100
+final_mobile = 60
 final_stable = 60
 final_disk = 30
 mid_depth = 36
-final_depth = 12
-final_search_depth = 6
+final_depth = 14
+final_search_depth = 8
 
 valueBoard = np.array([[-99, 48, -8, 6, 6, -8, 48, -99],
                        [48, -8, -16, 3, 3, -16, -8, 48],
