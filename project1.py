@@ -11,7 +11,7 @@ random.seed(0)
 # args
 table = False
 final_table = True
-stable = 60
+stable = 100
 disk = 50
 mobile = 100
 final_mobile = 60
@@ -29,6 +29,9 @@ valueBoard = np.array([[-99, 48, -8, 6, 6, -8, 48, -99],
                        [-8, -16, 4, 4, 4, 4, -16, -8],
                        [48, -8, -16, 3, 3, -16, -8, 48],
                        [-99, 48, -8, 6, 6, -8, 48, -99]])
+
+# final_valueBoard = np.loadtxt('board.txt')
+
 
 final_valueBoard = np.array([[-199, 88, -8, 6, 6, -8, 88, -199],
                              [88, -8, -16, 3, 3, -16, -8, 88],
