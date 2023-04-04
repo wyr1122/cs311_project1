@@ -14,7 +14,7 @@ final_table = True
 stable = 100
 disk = 50
 mobile = 100
-final_mobile = 60
+final_mobile = 200
 final_stable = 60
 final_disk = 30
 mid_depth = 36
@@ -167,6 +167,8 @@ def search(chessboard, c, alpha, beta, ply, is_max_node, num, depth, start, colo
             t = time.time()
         if t - start > 4.99:
             return 0, (-1, 0)
+        # if ply == 0:
+        #     print(x, y, v, step)
     if is_max_node:
         return alpha, step
     else:
@@ -228,7 +230,7 @@ def final_search(chessboard, c, ply, is_max_node, start, color, cnt):
             step = (x, y)
         with objmode(t='f8'):
             t = time.time()
-        if t - start > 4.5:
+        if t - start > 4:
             return -111, (-1, 0)
     return value, step
 
@@ -263,10 +265,10 @@ def get_value(chessboard, num, color, cnt, c):
                         result -= final_valueBoard[i][j]
                     result += final_disk
                 elif is_valid(-c, i, j, chessboard):
-                    result -= color * c * final_mobile
+                    result -= color * c * (final_mobile - (cnt - 8) * 5)
         if (color == c and cnt % 2 == 0) or (color != c and cnt % 2 != 0):
             result -= 200
-        result += num * color * c * final_mobile
+        result += num * color * c * (final_mobile - (cnt - 8) * 5)
         result += get_stable(chessboard, -color) * final_stable
         result -= get_stable(chessboard, color) * final_stable
     return result
