@@ -14,11 +14,11 @@ final_table = True
 stable = 100
 disk = 50
 mobile = 100
-final_mobile = 200
+final_mobile = 100
 final_stable = 60
 final_disk = 30
 mid_depth = 36
-final_depth = 14
+final_depth = 12
 final_search_depth = 8
 
 valueBoard = np.array([[-99, 48, -8, 6, 6, -8, 48, -99],
@@ -265,10 +265,10 @@ def get_value(chessboard, num, color, cnt, c):
                         result -= final_valueBoard[i][j]
                     result += final_disk
                 elif is_valid(-c, i, j, chessboard):
-                    result -= color * c * (final_mobile - (cnt - 8) * 5)
+                    result -= color * c * final_mobile
         if (color == c and cnt % 2 == 0) or (color != c and cnt % 2 != 0):
             result -= 200
-        result += num * color * c * (final_mobile - (cnt - 8) * 5)
+        result += num * color * c * final_mobile
         result += get_stable(chessboard, -color) * final_stable
         result -= get_stable(chessboard, color) * final_stable
     return result
