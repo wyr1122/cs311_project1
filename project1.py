@@ -147,10 +147,25 @@ def search(chessboard, c, alpha, beta, ply, is_max_node, num, depth, start, colo
         return get_value(chessboard, num, color, cnt, c), (-1, 0)
     moves = get_moves(chessboard, -c)
     step = (-1, 0)
+    mob = len(moves)
     if len(moves) == 0:
+        if num == 0:
+            self_cnt = 0
+            other_cnt = 0
+            for i in range(8):
+                for j in range(8):
+                    if chessboard[i][j] == color:
+                        self_cnt += 1
+                    elif chessboard[i][j] == -color:
+                        other_cnt += 1
+            if self_cnt < other_cnt:
+                result = 10000
+            else:
+                result = -10000
+            return result, (-1, 0)
         moves.append([-1, 0])
     for x, y in moves:
-        v, _ = search(move(chessboard, x, y, -c), -c, alpha, beta, ply + 1, not is_max_node, len(moves), depth, start,
+        v, _ = search(move(chessboard, x, y, -c), -c, alpha, beta, ply + 1, not is_max_node, mob, depth, start,
                       color, cnt, time_out)
         if is_max_node:
             if v > alpha:
