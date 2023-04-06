@@ -58,12 +58,12 @@ class AI(object):
         self.candidate_list = []
         start = time.time()
         color = -1
-        final_search(
-            np.array([[-1, -1, -1, -1, -1, -1, -1, 1], [-1, -1, -1, -1, 1, -1, 1, 1], [-1, 1, 1, 1, -1, 1, -1, 1],
-                      [-1, 1, 1, -1, 1, -1, 1, 1], [-1, 1, 1, -1, -1, 1, -1, 1], [-1, -1, -1, -1, -1, -1, 1, 1],
-                      [-1, -1, 1, 1, 1, 1, 1, 1], [-1, 1, 1, 1, 1, 1, 0, 0]]), -color, 0, True, start,
-            color, 2, self.time_out)
-
+        cb = np.array([[-1, -1, -1, -1, -1, -1, -1, 1], [-1, -1, -1, -1, 1, -1, 1, 1], [-1, 1, 1, 1, -1, 1, -1, 1],
+                       [-1, 1, 1, -1, 1, -1, 1, 1], [-1, 1, 1, -1, -1, 1, -1, 1], [-1, -1, -1, -1, -1, -1, 1, 1],
+                       [-1, -1, 1, 1, 1, 1, 1, 1], [-1, 1, 1, 1, 1, 1, 1, 1]])
+        # final_search(cb, -color, 0, True, start, color, 2, self.time_out)
+        get_value(cb, 0, color, 60, color)
+        is_valid(c, 0, 0, cb)
         # The input is the current chessboard. Chessboard is a numpy array.
 
     def go(self, chessboard):
