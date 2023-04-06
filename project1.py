@@ -11,14 +11,14 @@ random.seed(0)
 # args
 table = False
 final_table = True
-stable = 100
+stable = 200
 disk = 50
 mobile = 80
 final_mobile = 60
 final_stable = 60
 final_disk = 30
 mid_depth = 36
-final_depth = 12
+final_depth = 14
 final_search_depth = 8
 
 valueBoard = np.array([[-99, 48, -8, 6, 6, -8, 48, -99],
@@ -261,10 +261,14 @@ def get_value(chessboard, num, color, cnt, c):
                     if table:
                         result += valueBoard[i][j]
                     result -= disk
+                    # if (i == 0 or i == 8) and (j == 0 or j == 8):
+                    #     result -= 200
                 elif chessboard[i][j] == -color:
                     if table:
                         result -= valueBoard[i][j]
                     result += disk
+                    # if (i == 0 or i == 8) and (j == 0 or j == 8):
+                    #     result += 200
                 elif is_valid(-c, i, j, chessboard):
                     result -= color * c * mobile
         result += num * color * c * mobile
