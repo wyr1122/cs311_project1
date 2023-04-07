@@ -14,6 +14,7 @@ final_table = True
 stable = 300
 disk = 50
 mobile = 80
+corner = 400
 final_mobile = 60
 final_stable = 100
 final_disk = 30
@@ -34,12 +35,12 @@ valueBoard = np.array([[-99, 48, -8, 6, 6, -8, 48, -99],
 
 
 final_valueBoard = np.array([[-399, 188, -8, 6, 6, -8, 188, -399],
-                             [188, -8, -16, 3, 3, -16, -8, 188],
+                             [188, 88, -16, 3, 3, -16, 88, 188],
                              [-8, -16, 4, 4, 4, 4, -16, -8],
                              [6, 1, 2, 0, 0, 2, 1, 6],
                              [6, 1, 2, 0, 0, 2, 1, 6],
                              [-8, -16, 4, 4, 4, 4, -16, -8],
-                             [188, -8, -16, 3, 3, -16, -8, 188],
+                             [188, 88, -16, 3, 3, -16, 88, 188],
                              [-399, 188, -8, 6, 6, -8, 188, -399]])
 
 final_valueBoard2 = np.array([[-199, 88, -8, 6, 6, -8, 88, -199],
@@ -261,6 +262,29 @@ def final_search(chessboard, c, ply, is_max_node, start, color, cnt, time_out):
 
 
 @njit()
+def get_corner(chessboard, color):
+    corners = [[[1, 0], [1, 1], [0, 1]],
+               [[6, 7], [6, 6], [6, 7]],
+               [[0, 6], [1, 6], [1, 7]],
+               [[7, 1], [6, 1], [6, 0]]]
+    result = 0
+    for cor in corners:
+        min = True
+        for i, j in cor:
+            if chessboard[i][j] != color:
+                min = False
+        if min:
+            result += corner
+        min = True
+        for i, j in cor:
+            if chessboard[i][j] != -color:
+                min = False
+        if min:
+            result -= corner
+    return result
+
+
+@njit()
 def get_value(chessboard, num, color, cnt, c):
     result = 0
     if cnt > mid_depth:
@@ -270,16 +294,15 @@ def get_value(chessboard, num, color, cnt, c):
                     if table:
                         result += valueBoard[i][j]
                     result -= disk
-                    # if (i == 0 or i == 8) and (j == 0 or j == 8):
-                    #     result -= 200
                 elif chessboard[i][j] == -color:
                     if table:
                         result -= valueBoard[i][j]
                     result += disk
-                    # if (i == 0 or i == 8) and (j == 0 or j == 8):
-                    #     result += 200
                 elif is_valid(-c, i, j, chessboard):
                     result -= color * c * mobile
+                # if (i == 0 or i == 8) and (j == 0 or j == 8):
+                #     if is_valid(-color, i, j, chessboard):
+                #         result += corner
         result += num * color * c * mobile
         result -= get_stable(chessboard, color) * stable
     else:
@@ -295,11 +318,15 @@ def get_value(chessboard, num, color, cnt, c):
                     result += final_disk
                 elif is_valid(-c, i, j, chessboard):
                     result -= color * c * final_mobile
+                # if (i == 0 or i == 8) and (j == 0 or j == 8):
+                #     if is_valid(-color, i, j, chessboard):
+                #         result += corner
         if (color == c and cnt % 2 == 0) or (color != c and cnt % 2 != 0):
             result -= 200
         result += num * color * c * final_mobile
         result += get_stable(chessboard, -color) * final_stable
         result -= get_stable(chessboard, color) * final_stable
+        result += get_corner(chessboard, color)
     return result
 
 

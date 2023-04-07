@@ -9,13 +9,13 @@ chess = np.array(
 )
 start = time.time()
 ai = AI(8, -1, 5)
-ai2 = AI2(8, -1, 5)
+# ai2 = AI2(8, -1, 5)
 print(time.time() - start)
-chessboard = chess[50]
+chessboard = chess[41]
 print(chessboard)
-# start = time.time()
+start = time.time()
 ai.go(chessboard)
-# print(time.time() - start)
+print(time.time() - start)
 # start = time.time()
-ai2.go(chessboard)
+# ai2.go(chessboard)
 # print(time.time() - start)
