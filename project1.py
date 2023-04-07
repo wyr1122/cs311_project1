@@ -11,13 +11,13 @@ random.seed(0)
 # args
 table = False
 final_table = True
-stable = 200
+stable = 150
 disk = 50
 mobile = 80
-final_mobile = 60
-final_stable = 60
+final_mobile = 80
+final_stable = 120
 final_disk = 30
-mid_depth = 36
+mid_depth = 30
 final_depth = 14
 final_search_depth = 8
 
@@ -33,14 +33,14 @@ valueBoard = np.array([[-99, 48, -8, 6, 6, -8, 48, -99],
 # final_valueBoard = np.loadtxt('board.txt')
 
 
-final_valueBoard = np.array([[-399, 188, -8, 6, 6, -8, 188, -399],
-                             [188, -8, -16, 3, 3, -16, -8, 188],
+final_valueBoard = np.array([[-199, 88, -8, 6, 6, -8, 88, -199],
+                             [88, -8, -16, 3, 3, -16, -8, 88],
                              [-8, -16, 4, 4, 4, 4, -16, -8],
                              [6, 1, 2, 0, 0, 2, 1, 6],
                              [6, 1, 2, 0, 0, 2, 1, 6],
                              [-8, -16, 4, 4, 4, 4, -16, -8],
-                             [188, -8, -16, 3, 3, -16, -8, 188],
-                             [-399, 188, -8, 6, 6, -8, 188, -399]])
+                             [88, -8, -16, 3, 3, -16, -8, 88],
+                             [-199, 88, -8, 6, 6, -8, 88, -199]])
 
 
 # don't change the class name
